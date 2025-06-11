@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <!-- 基础元数据 -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}乐优服装商城{% endblock %}</title>
+    
+    <!-- 引入外部CSS样式 -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- 自定义样式 -->
+    <style>
+        /* 定义中文字体变量 */
+        :root {
+            --main-font: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "WenQuanYi Micro Hei", sans-serif;
+        }
+        
+        /* 全局字体设置 */
+        body {
+            font-family: var(--main-font);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* 导航栏品牌样式 */
+        .navbar-brand {
+            font-family: var(--main-font);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* 导航链接样式 */
+        .nav-link {
+            font-family: var(--main-font);
+            font-weight: 500;
+        }
+
+        /* 导航栏样式 */
+        .navbar {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* 搜索表单样式 */
+        .search-form {
+            flex-grow: 1;
+            max-width: 600px;
+            margin: 0 2rem;
+        }
+        .search-form .form-control {
+            border-radius: 20px;
+            padding-left: 1rem;
+            background-color: #f5f5f5;
+            border: none;
+        }
+        .search-form .btn {
+            border: none;
+            background: none;
+            color: #666;
+        }
+
+        /* 用户头像样式 */
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 2px solid #e9ecef;
+        }
+
+        /* 购物车图标样式 */
+        .cart-icon {
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        /* 用户下拉菜单样式 */
+        .user-dropdown {
+            position: relative;
+            cursor: pointer;
+        }
+
+        /* 下拉菜单样式 */
+        .dropdown-menu {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 0.5rem;
+            display: none;
+            min-width: 10rem;
+            padding: 0.5rem 0;
+            background-color: #fff;
+            border: 1px solid rgba(0,0,0,.15);
+            border-radius: 0.25rem;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+            z-index: 1000;
+        }
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        /* 下拉菜单项样式 */
+        .dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 1rem;
+            clear: both;
+            font-weight: 400;
+            color: #212529;
+            text-align: inherit;
+            text-decoration: none;
+            white-space: nowrap;
+            background-color: transparent;
+            border: 0;
+        }
+        .dropdown-item:hover {
+            color: #1e2125;
+            background-color: #f8f9fa;
+            text-decoration: none;
+        }
+
+        /* 下拉菜单分隔线样式 */
+        .dropdown-divider {
+            height: 0;
+            margin: 0.5rem 0;
+            overflow: hidden;
+            border-top: 1px solid #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <!-- Logo区域 -->
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <i class="fas fa-tshirt text-pink me-2"></i>
+                <span>乐优服装商城</span>
+            </a>
+
+            <!-- 导航链接区域 -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" 
+                           href="{{ url_for('main.index') }}">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'main.hot' %}active{% endif %}" 
+                           href="{{ url_for('main.hot') }}">热门推荐</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'main.profile' %}active{% endif %}" 
+                           href="{{ url_for('main.profile') }}">个人中心</a>
+                    </li>
+                </ul>
+
+                <!-- 搜索框 -->
+                <form class="d-flex search-form" action="{{ url_for('main.search') }}" method="get">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-0">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input class="form-control" type="search" name="q" placeholder="输入关键词" aria-label="Search">
+                    </div>
+                </form>
+
+                <!-- 用户操作区域 -->
+                <div class="d-flex align-items-center">
+                    {% if current_user.is_authenticated %}
+                        <!-- 购物车图标 -->
+                        <a href="{{ url_for('cart.cart') }}" class="me-4 text-decoration-none">
+                            <i class="fas fa-shopping-cart cart-icon"></i>
+                        </a>
+                        
+                        <!-- 用户头像下拉菜单 -->
+                        <div class="user-dropdown">
+                            <div class="user-avatar">
+                                {% if current_user.img %}
+                                <img src="{{ current_user.img }}" alt="User Avatar" class="rounded-circle" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                <i class="fas fa-user text-muted"></i>
+                                {% endif %}
+                            </div>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('main.profile') }}">个人设置</a></li>
+                                {% if current_user.is_admin %}
+                                <li><a class="dropdown-item" href="{{ url_for('admin.orders') }}">管理后台</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">退出</a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <!-- 未登录时显示登录按钮 -->
+                        <a class="btn btn-primary" href="{{ url_for('auth.login') }}">登录</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 移动端导航栏切换按钮 -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 分类导航栏 -->
+    {% if categories %}
+    <div class="category-nav">
+        <div class="container">
+            <ul class="nav">
+                <li class="nav-item">
+                    <a class="nav-link {% if not request.args.get('category') %}active{% endif %}" 
+                       href="{{ url_for('main.index') }}">全部</a>
+                </li>
+                {% for category in categories %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.args.get('category')|int == category.id %}active{% endif %}" 
+                       href="{{ url_for('main.index', category=category.id) }}">{{ category.name }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 主要内容区域 -->
+    <div class="container mt-4">
+        <!-- 消息提示区域 -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- 页面内容块 -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- 引入JavaScript库 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            const userDropdown = document.querySelector('.user-dropdown');
+            const dropdownMenu = userDropdown?.querySelector('.dropdown-menu');
+            let isDropdownOpen = false;
+
+            if (userDropdown && dropdownMenu) {
+                // 点击切换下拉菜单显示状态
+                userDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    isDropdownOpen = !isDropdownOpen;
+                    dropdownMenu.classList.toggle('show');
+                });
+
+                // 点击页面其他区域关闭下拉菜单
+                document.addEventListener('click', function(e) {
+                    if (!userDropdown.contains(e.target) && isDropdownOpen) {
+                        dropdownMenu.classList.remove('show');
+                        isDropdownOpen = false;
+                    }
+                });
+            }
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html> 

@@ -1,0 +1,80 @@
+{# 继承自管理后台基础模板 #}
+{% extends "admin/base.html" %}
+
+{# 设置页面标题 #}
+{% block title %}推荐功能 - 管理后台{% endblock %}
+
+{# 主要内容区域 #}
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            {# 推荐功能状态卡片 #}
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">推荐功能管理</h4>
+                </div>
+                <div class="card-body">
+                    {# 检查推荐功能是否已开启 #}
+                    {% if similarity_exists %}
+                        {# 已开启状态显示 #}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> 推荐功能已开启
+                        </div>
+                        <p>系统已经计算了商品相似度，可以为用户提供个性化推荐。</p>
+                        {# 重新计算相似度的表单 #}
+                        <form method="POST" class="mt-3">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-sync"></i> 重新计算相似度
+                            </button>
+                        </form>
+                    {% else %}
+                        {# 未开启状态显示 #}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> 推荐功能未开启
+                        </div>
+                        <p>系统尚未计算商品相似度，无法为用户提供个性化推荐。</p>
+                        {# 开启推荐功能的表单 #}
+                        <form method="POST" class="mt-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-magic"></i> 开启推荐功能
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {# 推荐系统说明卡片 #}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h4 class="mb-0">推荐系统说明</h4>
+                </div>
+                <div class="card-body">
+                    {# 推荐系统工作原理说明 #}
+                    <h5>工作原理</h5>
+                    <p>推荐系统基于用户的行为数据，包括：</p>
+                    <ul>
+                        <li>浏览商品（权重：1）</li>
+                        <li>加入购物车（权重：2）</li>
+                        <li>购买商品（权重：3）</li>
+                    </ul>
+                    
+                    {# 推荐流程说明 #}
+                    <h5 class="mt-3">推荐流程</h5>
+                    <ol>
+                        <li>收集用户最近30天的行为数据</li>
+                        <li>计算用户对商品的兴趣分数</li>
+                        <li>基于商品相似度推荐相关商品</li>
+                        <li>过滤掉用户已经接触过的商品</li>
+                    </ol>
+                    
+                    {# 提示信息 #}
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i> 提示：建议定期重新计算相似度，以保持推荐的准确性
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

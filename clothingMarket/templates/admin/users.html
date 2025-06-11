@@ -1,0 +1,174 @@
+{# 继承自admin/base.html模板 #}
+{% extends "admin/base.html" %}
+
+{# 页面标题 #}
+{% block title %}用户管理 - 后台管理系统{% endblock %}
+
+{# 主内容区域 #}
+{% block content %}
+<div class="container-fluid">
+    {# 页面标题 #}
+    <h2 class="mb-4">用户管理</h2>
+    
+    <!-- 搜索栏 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" name="username" placeholder="用户名" value="{{ request.args.get('username', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <input type="email" class="form-control" name="email" placeholder="邮箱" value="{{ request.args.get('email', '') }}">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="status">
+                        <option value="">所有状态</option>
+                        <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>正常</option>
+                        <option value="disabled" {% if request.args.get('status') == 'disabled' %}selected{% endif %}>禁用</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">搜索</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 用户列表 -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户名</th>
+                            <th>邮箱</th>
+                            <th>手机号码</th>
+                            <th>注册时间</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users.items %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.phone or '未设置' }}</td>
+                            <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if user.status == 'active' else 'danger' }}">
+                                    {{ '正常' if user.status == 'active' else '禁用' }}
+                                </span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-info" 
+                                        onclick="showUserDetails('{{ user.id }}')">
+                                    查看
+                                </button>
+                                {% if user.status == 'active' %}
+                                <button type="button" class="btn btn-sm btn-warning" 
+                                        onclick="toggleUserStatus('{{ user.id }}', 'disable')">
+                                    禁用
+                                </button>
+                                {% else %}
+                                <button type="button" class="btn btn-sm btn-success" 
+                                        onclick="toggleUserStatus('{{ user.id }}', 'enable')">
+                                    启用
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {{ 'disabled' if not users.has_prev }}">
+                        <a class="page-link" href="{{ url_for('admin.users', page=users.prev_num, **request.args) if users.has_prev else '#' }}">上一页</a>
+                    </li>
+                    {% for page in users.iter_pages() %}
+                        {% if page %}
+                            <li class="page-item {{ 'active' if page == users.page }}">
+                                <a class="page-link" href="{{ url_for('admin.users', page=page, **request.args) }}">{{ page }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item {{ 'disabled' if not users.has_next }}">
+                        <a class="page-link" href="{{ url_for('admin.users', page=users.next_num, **request.args) if users.has_next else '#' }}">下一页</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- 用户详情模态框 -->
+<div class="modal fade" id="userDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">用户详情</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="userDetailContent">
+                    <!-- 用户详情将通过 AJAX 加载 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showUserDetails(userId) {
+    const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
+    fetch(`/admin/users/${userId}/details`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('获取用户详情失败');
+            }
+            return response.text();
+        })
+        .then(html => {
+            document.getElementById('userDetailContent').innerHTML = html;
+            modal.show();
+        })
+        .catch(error => {
+            alert(error.message);
+        });
+}
+
+function toggleUserStatus(userId, action) {
+    if (!confirm(`确定要${action === 'disable' ? '禁用' : '启用'}该用户吗？`)) {
+        return;
+    }
+
+    fetch(`/admin/users/${userId}/${action}`, {
+        method: 'POST'
+    })
+    .then(response => {
+        if (response.ok) {
+            location.reload();
+        } else {
+            response.json().then(data => {
+                alert(data.message || '操作失败');
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('操作失败，请重试');
+    });
+}
+</script>
+{% endblock %}

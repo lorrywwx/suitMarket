@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - 乐优服装商城{% endblock %}
+
+{% block styles %}
+<style>
+.product-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.product-card .card-img-top {
+    height: 250px;
+    object-fit: cover;
+}
+
+.product-card .card-title {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.product-card .card-text {
+    color: #6c757d;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 3em;
+}
+
+.price {
+    color: #dc3545;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.stock-info {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 0;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: #dee2e6;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: #6c757d;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>{{ title }}</h2>
+            {% if current_user.is_authenticated %}
+            <p class="text-muted">根据您的浏览历史和购物偏好，为您精选以下商品</p>
+            {% else %}
+            <p class="text-muted">近期最受欢迎的商品</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if products %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+        {% for product in products %}
+        <div class="col">
+            <div class="card product-card">
+                <a href="{{ url_for('main.product_detail', product_id=product.id) }}" class="text-decoration-none">
+                    {% if product.image_url %}
+                    <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}">
+                    {% else %}
+                    <div class="card-img-top d-flex align-items-center justify-content-center bg-light">
+                        <i class="fas fa-tshirt fa-3x text-muted"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title text-dark">{{ product.name }}</h5>
+                        <p class="card-text">{{ product.description[:100] }}{% if product.description|length > 100 %}...{% endif %}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <span class="price">¥{{ "%.2f"|format(product.price) }}</span>
+                            <span class="stock-info">库存: {{ product.stock }}</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-box-open"></i>
+        {% if current_user.is_authenticated %}
+        <p>继续浏览更多商品，系统将为您推荐个性化商品</p>
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary">浏览商品</a>
+        {% else %}
+        <p>暂无热门商品，登录后获取个性化推荐</p>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary">立即登录</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

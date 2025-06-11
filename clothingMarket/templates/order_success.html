@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}支付成功 - 乐优服装商城{% endblock %}
+
+{% block styles %}
+<style>
+/* 成功提示容器样式 */
+.success-container {
+    max-width: 600px;
+    margin: 3rem auto;
+    text-align: center;
+    padding: 2rem;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* 成功图标样式 */
+.success-icon {
+    width: 80px;
+    height: 80px;
+    background: #28a745;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+}
+
+/* 成功图标内部图标样式 */
+.success-icon i {
+    font-size: 40px;
+    color: #fff;
+}
+
+/* 订单信息区域样式 */
+.order-info {
+    margin: 2rem 0;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    text-align: left;
+}
+
+/* 订单信息表格样式 */
+.order-info table {
+    width: 100%;
+}
+
+/* 表格单元格样式 */
+.order-info td {
+    padding: 0.5rem;
+}
+
+/* 表格第一列样式 */
+.order-info td:first-child {
+    color: #666;
+    width: 120px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="success-container">
+    {# 成功图标 #}
+    <div class="success-icon">
+        <i class="fas fa-check"></i>
+    </div>
+    
+    {# 成功提示文字 #}
+    <h2>支付成功</h2>
+    <p class="text-muted mb-4">感谢您的购买！</p>
+
+    {# 订单信息表格 #}
+    <div class="order-info">
+        <table>
+            <tr>
+                <td>订单号：</td>
+                <td>{{ order.order_number }}</td>
+            </tr>
+            <tr>
+                <td>支付金额：</td>
+                <td class="text-danger">￥{{ "%.2f"|format(order.total_amount) }}</td>
+            </tr>
+            <tr>
+                <td>支付方式：</td>
+                <td>{{ {'alipay': '支付宝', 'wechat': '微信支付'}[order.payment_method] }}</td>
+            </tr>
+            <tr>
+                <td>支付时间：</td>
+                <td>{{ order.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            </tr>
+        </table>
+    </div>
+
+    {# 操作按钮 #}
+    <div class="mt-4">
+        <a href="{{ url_for('main.profile') }}" class="btn btn-primary me-2">查看订单</a>
+        <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary">继续购物</a>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,123 @@
+{# 继承基础模板 #}
+{% extends "base.html" %}
+
+{# 设置页面标题 #}
+{% block title %}购物车 - 乐优服装商城{% endblock %}
+
+{# 定义页面内容块 #}
+{% block content %}
+{# 购物车容器 #}
+<div class="container">
+    {# 页面标题 #}
+    <h2 class="mb-4">我的购物车</h2>
+
+    {# 购物车商品列表 #}
+    {% if cart_items %}
+    {# 响应式表格容器 #}
+    <div class="table-responsive">
+        {# 购物车商品表格 #}
+        <table class="table">
+            {# 表格头部 #}
+            <thead>
+                <tr>
+                    <th>商品</th>
+                    <th>单价</th>
+                    <th>数量</th>
+                    <th>小计</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            {# 表格内容 #}
+            <tbody>
+                {% for item in cart_items %}
+                <tr>
+                    {# 商品信息单元格 #}
+                    <td>
+                        {# 商品图片和名称容器 #}
+                        <div class="d-flex align-items-center">
+                            {# 商品图片 #}
+                            {% if item.product.image_url %}
+                            <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" style="width: 50px; height: 50px; object-fit: cover;" class="me-2">
+                            {% endif %}
+                            {# 商品名称 #}
+                            <div>
+                                <h6 class="mb-0">{{ item.product.name }}</h6>
+                            </div>
+                        </div>
+                    </td>
+                    <td>￥{{ "%.2f"|format(item.product.price) }}</td>
+                    {# 商品数量更新表单 #}
+                    <td>
+                        {# 更新数量表单 #}
+                        <form action="{{ url_for('cart.update_cart', product_id=item.product_id) }}" method="post" class="d-flex align-items-center">
+                            {# 数量输入框 #}
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" class="form-control" style="width: 80px;">
+                            {# 更新按钮 #}
+                            <button type="submit" class="btn btn-sm btn-outline-secondary ms-2">更新</button>
+                        </form>
+                    </td>
+                    <td>￥{{ "%.2f"|format(item.product.price * item.quantity) }}</td>
+                    {# 删除商品操作 #}
+                    <td>
+                        {# 删除商品表单 #}
+                        <form action="{{ url_for('cart.remove_from_cart', product_id=item.product_id) }}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-danger btn-sm">删除</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {# 底部操作区域 #}
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            {# 继续购物按钮 #}
+            <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>继续购物
+            </a>
+            {# 结算区域 #}
+            <div class="text-end">
+                {# 总计金额 #}
+                <h5 class="mb-3">总计：￥{{ "%.2f"|format(total) }}</h5>
+                {# 结算表单 #}
+                <form action="{{ url_for('cart.checkout') }}" method="post" class="d-inline">
+                    {# 结算按钮 #}
+                    <button type="submit" class="btn btn-primary">结算</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+        <p class="lead text-muted">购物车是空的</p>
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary mt-3">
+            <i class="fas fa-arrow-left me-2"></i>去购物
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.table img {
+    border-radius: 4px;
+}
+
+.btn-outline-primary {
+    border-radius: 20px;
+}
+
+.btn-primary {
+    border-radius: 20px;
+    padding: 0.5rem 2rem;
+}
+
+.form-control {
+    border-radius: 20px;
+}
+
+.btn-sm {
+    border-radius: 15px;
+}
+</style>
+{% endblock %}

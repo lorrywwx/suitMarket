@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+{# 基础模板，所有admin页面都继承此模板 #}
+{# 包含通用布局、样式和脚本 #}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}管理后台 - 乐优服装商城{% endblock %}</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="wrapper">
+        <!-- 侧边栏 -->
+        {# 管理后台的主导航栏 #}
+        {# 根据当前路由自动激活对应菜单项 #}
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <h3>乐优服装商城管理系统</h3>
+            </div>
+
+            <ul class="list-unstyled components">
+                <li class="{% if request.endpoint == 'admin.admin_index' %}active{% endif %}">
+                    <a href="{{ url_for('admin.admin_index') }}">
+                        <i class="fas fa-chart-line"></i>
+                        仪表盘
+                    </a>
+                </li>
+                <li class="{% if request.endpoint == 'admin.product_list' %}active{% endif %}">
+                    <a href="{{ url_for('admin.product_list') }}">
+                        <i class="fas fa-tshirt"></i>
+                        商品管理
+                    </a>
+                </li>
+                <li class="{% if request.endpoint == 'admin.orders' %}active{% endif %}">
+                    <a href="{{ url_for('admin.orders') }}">
+                        <i class="fas fa-shopping-cart"></i>
+                        订单管理
+                    </a>
+                </li>
+                <li class="{% if request.endpoint == 'admin.users' %}active{% endif %}">
+                    <a href="{{ url_for('admin.users') }}">
+                        <i class="fas fa-users"></i>
+                        用户管理
+                    </a>
+                </li>
+                <li class="{% if request.endpoint == 'admin.sales_statistics' %}active{% endif %}">
+                    <a href="{{ url_for('admin.sales_statistics') }}">
+                        <i class="fas fa-chart-bar"></i>
+                        销售统计
+                    </a>
+                </li>
+                <li class="{% if request.endpoint == 'admin.calculate_similarity' %}active{% endif %}">
+                    <a href="{{ url_for('admin.calculate_similarity') }}">
+                        <i class="fas fa-magic"></i>
+                        开启推荐功能
+                    </a>
+                </li>
+                <li class="{% if request.endpoint == 'admin.settings' %}active{% endif %}">
+                    <a href="{{ url_for('admin.settings') }}">
+                        <i class="fas fa-cog"></i>
+                        系统设置
+                    </a>
+                </li>
+                <li class="{% if request.endpoint == 'admin.comments' %}active{% endif %}">
+                    <a href="{{ url_for('admin.comments') }}">
+                        <i class="fas fa-comments"></i>
+                        评论管理
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- 页面内容 -->
+        <div id="content">
+            <!-- 顶部导航栏 -->
+            {# 顶部操作栏，包含返回前台和退出登录功能 #}
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <div class="navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav ms-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('main.index') }}">
+                                    <i class="fas fa-home"></i> 返回前台
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt"></i> 退出
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- 主要内容区域 -->
+            <div class="container-fluid">
+                {# 消息提示区域，用于显示操作反馈信息 #}
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-info">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

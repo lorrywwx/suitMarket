@@ -1,0 +1,470 @@
+{% extends "admin/base.html" %}
+{# 仪表盘页面继承自管理后台基础模板 #}
+
+{% block title %}数据分析 - 管理后台{% endblock %}
+
+{% block styles %}
+{# 仪表盘页面自定义样式 #}
+<style>
+.dashboard-container {
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+}
+
+.stats-card {
+    background: #fff;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 2px solid #6c757d;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    border-color: #007bff;
+}
+
+.stats-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(45deg, #007bff, #00bcd4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.stats-number {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.stats-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.chart-card {
+    background: #fff;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border: 2px solid #6c757d;
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-card:hover {
+    border-color: #007bff;
+}
+
+.chart-title {
+    font-size: 1.25rem;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #007bff;
+    font-weight: 600;
+}
+
+.chart-container {
+    position: relative;
+    min-height: 300px;
+    padding: 1rem;
+    border: 2px solid #6c757d;
+    border-radius: 10px;
+    background-color: #ffffff;
+}
+
+.chart-container:hover {
+    border-color: #007bff;
+}
+
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+
+.dashboard-title {
+    font-size: 1.75rem;
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.dashboard-subtitle {
+    color: #6c757d;
+    font-size: 1rem;
+    margin-bottom: 2rem;
+}
+
+.trend-up {
+    color: #28a745;
+}
+
+.trend-down {
+    color: #dc3545;
+}
+
+@media (max-width: 768px) {
+    .stats-card {
+        margin-bottom: 1rem;
+    }
+    
+    .chart-card {
+        margin-bottom: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{# 仪表盘主要内容区域 #}
+<div class="dashboard-container">
+    <!-- 仪表盘标题 -->
+    <div class="dashboard-header">
+        <h2 class="dashboard-title">数据分析仪表盘</h2>
+        <p class="dashboard-subtitle">实时监控商城运营数据</p>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card text-center">
+                <div class="stats-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="stats-number">{{ total_orders }}</div>
+                <div class="stats-label">近30天订单数</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card text-center">
+                <div class="stats-icon">
+                    <i class="fas fa-yen-sign"></i>
+                </div>
+                <div class="stats-number">¥{{ "%.2f"|format(total_sales) }}</div>
+                <div class="stats-label">近30天销售额</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card text-center">
+                <div class="stats-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stats-number">{{ total_behaviors }}</div>
+                <div class="stats-label">用户行为总数</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card text-center">
+                <div class="stats-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stats-number">{{ total_products }}</div>
+                <div class="stats-label">热门商品数</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图表区域 -->
+    <div class="row">
+        <!-- 销售趋势图 -->
+        <div class="col-lg-8 col-md-12">
+            <div class="chart-card">
+                <h3 class="chart-title">
+                    <i class="fas fa-chart-line me-2"></i>销售趋势
+                </h3>
+                <div class="chart-container">
+                    <canvas id="salesTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 用户行为分布图 -->
+        <div class="col-lg-4 col-md-12">
+            <div class="chart-card">
+                <h3 class="chart-title">
+                    <i class="fas fa-chart-pie me-2"></i>用户行为分布
+                </h3>
+                <div class="chart-container">
+                    <canvas id="userBehaviorChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 热门商品排行 -->
+        <div class="col-lg-6 col-md-12">
+            <div class="chart-card">
+                <h3 class="chart-title">
+                    <i class="fas fa-fire me-2"></i>热门商品TOP10
+                </h3>
+                <div class="chart-container">
+                    <canvas id="popularProductsChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 分类销售占比 -->
+        <div class="col-lg-6 col-md-12">
+            <div class="chart-card">
+                <h3 class="chart-title">
+                    <i class="fas fa-chart-donut me-2"></i>分类销售占比
+                </h3>
+                <div class="chart-container">
+                    <canvas id="categorySalesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{# 图表初始化脚本 #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 设置全局Chart.js配置
+    Chart.defaults.font.family = "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif";
+    Chart.defaults.font.size = 13;
+    Chart.defaults.color = '#6c757d';
+    Chart.defaults.borderColor = '#dee2e6';
+    Chart.defaults.elements.line.borderWidth = 2;
+    Chart.defaults.elements.bar.borderWidth = 2;
+    Chart.defaults.elements.arc.borderWidth = 2;
+
+    // 行为类型映射
+    const behaviorTypeMap = {
+        'view': '浏览',
+        'cart': '加入购物车',
+        'purchase': '购买'
+    };
+
+    // 销售趋势图
+    new Chart(document.getElementById('salesTrendChart'), {
+        type: 'line',
+        data: {
+            labels: {{ sales_trend|map(attribute='date')|list|tojson }},
+            datasets: [{
+                label: '订单数',
+                data: {{ sales_trend|map(attribute='order_count')|list|tojson }},
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                tension: 0.4,
+                fill: true,
+                yAxisID: 'y',
+                borderWidth: 2
+            }, {
+                label: '销售额',
+                data: {{ sales_trend|map(attribute='total_sales')|list|tojson }},
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                tension: 0.4,
+                fill: true,
+                yAxisID: 'y1',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: '订单数',
+                        font: {
+                            weight: 'bold'
+                        }
+                    },
+                    beginAtZero: true,
+                    border: {
+                        display: true,
+                        width: 2,
+                        color: '#dee2e6'
+                    },
+                    grid: {
+                        drawBorder: true,
+                        color: '#dee2e6'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: '销售额',
+                        font: {
+                            weight: 'bold'
+                        }
+                    },
+                    beginAtZero: true,
+                    border: {
+                        display: true,
+                        width: 2,
+                        color: '#dee2e6'
+                    },
+                    grid: {
+                        drawBorder: true,
+                        color: '#dee2e6'
+                    }
+                },
+                x: {
+                    border: {
+                        display: true,
+                        width: 2,
+                        color: '#dee2e6'
+                    },
+                    grid: {
+                        drawBorder: true,
+                        color: '#dee2e6'
+                    }
+                }
+            }
+        }
+    });
+
+    // 用户行为分布图
+    new Chart(document.getElementById('userBehaviorChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ user_behaviors|map(attribute='behavior_type')|list|tojson }}.map(type => behaviorTypeMap[type] || type),
+            datasets: [{
+                data: {{ user_behaviors|map(attribute='count')|list|tojson }},
+                backgroundColor: [
+                    'rgba(0, 123, 255, 0.8)',
+                    'rgba(40, 167, 69, 0.8)',
+                    'rgba(255, 193, 7, 0.8)'
+                ],
+                borderColor: '#dee2e6',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                }
+            },
+            cutout: '70%'
+        }
+    });
+
+    // 热门商品排行图
+    new Chart(document.getElementById('popularProductsChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ popular_products|map(attribute='name')|list|tojson }},
+            datasets: [{
+                label: '浏览次数',
+                data: {{ popular_products|map(attribute='sales_count')|list|tojson }},
+                backgroundColor: 'rgba(0, 123, 255, 0.8)',
+                borderColor: '#dee2e6',
+                borderWidth: 2,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    border: {
+                        display: true,
+                        width: 2,
+                        color: '#dee2e6'
+                    },
+                    grid: {
+                        drawBorder: true,
+                        color: '#dee2e6'
+                    }
+                },
+                y: {
+                    border: {
+                        display: true,
+                        width: 2,
+                        color: '#dee2e6'
+                    },
+                    grid: {
+                        display: true,
+                        drawBorder: true,
+                        color: '#dee2e6'
+                    }
+                }
+            }
+        }
+    });
+
+    // 分类销售占比图
+    new Chart(document.getElementById('categorySalesChart'), {
+        type: 'pie',
+        data: {
+            labels: {{ category_sales|map(attribute='name')|list|tojson }},
+            datasets: [{
+                data: {{ category_sales|map(attribute='sales_count')|list|tojson }},
+                backgroundColor: [
+                    'rgba(0, 123, 255, 0.8)',
+                    'rgba(40, 167, 69, 0.8)',
+                    'rgba(255, 193, 7, 0.8)',
+                    'rgba(220, 53, 69, 0.8)',
+                    'rgba(111, 66, 193, 0.8)',
+                    'rgba(253, 126, 20, 0.8)',
+                    'rgba(32, 201, 151, 0.8)',
+                    'rgba(23, 162, 184, 0.8)'
+                ],
+                borderColor: '#dee2e6',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

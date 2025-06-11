@@ -1,0 +1,56 @@
+{# 继承自admin/base.html模板 #}
+{% extends "admin/base.html" %}
+
+{# 页面标题 #}
+{% block title %}商品管理 - 乐优服装商城{% endblock %}
+
+{# 主内容区域 #}
+{% block content %}
+{# 标题和添加商品按钮 #}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>商品管理</h2>
+    {# 添加商品按钮，跳转到新建商品页面 #}
+    <a href="{{ url_for('admin.new_product') }}" class="btn btn-primary">添加商品</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>商品名称</th>
+                        <th>类别</th>
+                        <th>价格</th>
+                        <th>库存</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>{{ product.id }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if product.image_url %}
+                                <img src="{{ product.image_url }}" alt="{{ product.name }}" style="width: 50px; height: 50px; object-fit: cover;" class="me-2">
+                                {% endif %}
+                                {{ product.name }}
+                            </div>
+                        </td>
+                        <td>{{ product.category.name }}</td>
+                        <td>￥{{ "%.2f"|format(product.price) }}</td>
+                        <td>{{ product.stock }}</td>
+                        <td>
+                            <a href="{{ url_for('admin.edit_product', id=product.id) }}" class="btn btn-sm btn-outline-primary">编辑</a>
+                            <a href="{{ url_for('admin.delete_product', id=product.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('确定要删除这个商品吗？')">删除</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

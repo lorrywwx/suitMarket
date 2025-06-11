@@ -1,0 +1,119 @@
+{# 继承admin/base.html模板，并设置页面标题 #}
+{% extends "admin/base.html" %}
+
+{% block title %}评论管理 - 管理后台{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">评论管理</h4>
+                </div>
+                <div class="card-body">
+                    {# 响应式表格，用于展示评论数据 #}
+<div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col" style="width: 5%">ID</th>
+                                    <th scope="col" style="width: 10%; white-space: nowrap;">用户</th>
+                                    <th scope="col" style="width: 20%">商品</th>
+                                    <th scope="col" style="width: 10%">评分</th>
+                                    <th scope="col" style="width: 35%">评论内容</th>
+                                    <th scope="col" style="width: 12%">评论时间</th>
+                                    <th scope="col" style="width: 8%">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for comment in comments.items %}
+                                <tr>
+                                    <td>{{ comment.id }}</td>
+                                    <td>{{ comment.user.username }}</td>
+                                    <td>{{ comment.product.name }}</td>
+                                    <td>
+                                        <div class="rating">
+                                            {% for i in range(comment.rating) %}
+                                            <i class="fas fa-star text-warning"></i>
+                                            {% endfor %}
+                                            {% for i in range(5 - comment.rating) %}
+                                            <i class="far fa-star text-warning"></i>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td>{{ comment.content }}</td>
+                                    <td>{{ comment.display_time }}</td>
+                                    <td>
+                                        <button class="btn btn-danger btn-sm" 
+                                                onclick="deleteComment({{ comment.id }})">
+                                            <i class="fas fa-trash"></i> 删除
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {# 分页组件，用于浏览不同页面的评论 #}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if comments.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.comments', page=comments.prev_num) }}">上一页</a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for page in comments.iter_pages() %}
+                                {% if page %}
+                                    <li class="page-item {% if page == comments.page %}active{% endif %}">
+                                        <a class="page-link" href="{{ url_for('admin.comments', page=page) }}">{{ page }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if comments.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.comments', page=comments.next_num) }}">下一页</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{# JavaScript代码块，实现评论删除功能 #}
+{% block scripts %}
+<script>
+function deleteComment(commentId) {
+    if (confirm('确定要删除这条评论吗？')) {
+        fetch(`/admin/comments/${commentId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('删除失败，请重试');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('删除失败，请重试');
+        });
+    }
+}
+</script>
+{% endblock %}

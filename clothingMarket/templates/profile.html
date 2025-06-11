@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}个人中心{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- 左侧导航栏 -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body p-0">
+                    <!-- 用户信息侧边栏 -->
+                    <div class="profile-sidebar text-center p-3">
+                        <!-- 用户头像区域 -->
+                        <div class="position-relative d-inline-block mb-3">
+                            <img src="{{ current_user.img }}" alt="用户头像" 
+                                 class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                            <!-- 更换头像按钮 -->
+                            <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0"
+                                    data-bs-toggle="modal" data-bs-target="#avatarModal">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                        </div>
+                        <!-- 用户名和邮箱显示 -->
+                        <h5 class="mb-2">{{ current_user.username }}</h5>
+                        <p class="text-muted small mb-0">{{ current_user.email }}</p>
+                    </div>
+                    <!-- 导航菜单 -->
+                    <div class="list-group list-group-flush">
+                        <button class="list-group-item list-group-item-action active" data-bs-toggle="tab" data-bs-target="#profile-info">
+                            <i class="fas fa-user me-2"></i>个人信息管理
+                        </button>
+                        <button class="list-group-item list-group-item-action" data-bs-toggle="tab" data-bs-target="#account-security">
+                            <i class="fas fa-shield-alt me-2"></i>账号安全
+                        </button>
+                        <button class="list-group-item list-group-item-action" data-bs-toggle="tab" data-bs-target="#my-orders">
+                            <i class="fas fa-shopping-bag me-2"></i>我的订单
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧内容区 -->
+        <div class="col-md-9">
+            <div class="tab-content">
+                <!-- 个人信息管理 -->
+                <div class="tab-pane fade show active" id="profile-info">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">个人信息管理</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- 个人信息表单 -->
+                            <form action="{{ url_for('main.update_profile') }}" method="POST">
+                                <div class="mb-3">
+                                    <label class="form-label">用户名</label>
+                                    <input type="text" class="form-control" name="username" value="{{ current_user.username }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">邮箱</label>
+                                    <input type="email" class="form-control" name="email" value="{{ current_user.email }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">手机号码</label>
+                                    <input type="tel" class="form-control" name="phone" value="{{ current_user.phone }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">收货地址</label>
+                                    <textarea class="form-control" name="address" rows="3">{{ current_user.address }}</textarea>
+                                </div>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">保存修改</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 账号安全 -->
+                <div class="tab-pane fade" id="account-security">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">账号安全</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- 修改密码表单 -->
+                            <form action="{{ url_for('main.change_password') }}" method="POST">
+                                <div class="mb-3">
+                                    <label class="form-label">当前密码</label>
+                                    <input type="password" class="form-control" name="current_password" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">新密码</label>
+                                    <input type="password" class="form-control" name="new_password" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">确认新密码</label>
+                                    <input type="password" class="form-control" name="confirm_password" required>
+                                </div>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">修改密码</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 我的订单 -->
+                <div class="tab-pane fade" id="my-orders">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">我的订单</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- 订单列表 -->
+                            {% if orders %}
+                                {% for order in orders %}
+                                <div class="order-item mb-4">
+                                    <!-- 订单基本信息 -->
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6>订单号：{{ order.order_number }}</h6>
+                                        {% if order.status == 'pending' %}
+                                            <span class="badge bg-warning">待支付</span>
+                                        {% elif order.status == 'paid' %}
+                                            <span class="badge bg-success">已支付</span>
+                                        {% elif order.status == 'cancelled' %}
+                                            <span class="badge bg-danger">已取消</span>
+                                        {% elif order.status == 'completed' %}
+                                            <span class="badge bg-info">已完成</span>
+                                        {% endif %}
+                                    </div>
+                                    <!-- 订单详情 -->
+                                    <div class="order-details mt-2">
+                                        <p class="text-muted">下单时间：{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                                        <p class="text-muted">总金额：¥{{ "%.2f"|format(order.total_amount) }}</p>
+                                        <!-- 待支付订单的操作按钮 -->
+                                        {% if order.status == 'pending' %}
+                                        <div class="text-end mt-2">
+                                            <button type="button" class="btn btn-outline-danger btn-sm me-2" 
+                                                    onclick="showCancelConfirmation('{{ order.id }}', '{{ order.order_number }}')">
+                                                <i class="fas fa-times me-1"></i>取消订单
+                                            </button>
+                                            <a href="{{ url_for('main.pay_order', order_id=order.id) }}" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-credit-card me-1"></i>去支付
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <!-- 订单商品列表 -->
+                                    <div class="order-products">
+                                        {% for item in order.items %}
+                                        <div class="product-item d-flex align-items-center mt-2">
+                                            <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" 
+                                                 class="me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                            <div>
+                                                <p class="mb-0">{{ item.product.name }}</p>
+                                                <small class="text-muted">数量：{{ item.quantity }} × ¥{{ "%.2f"|format(item.price) }}</small>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <!-- 无订单时显示提示信息 -->
+                                <div class="text-center py-4">
+                                    <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                                    <p>暂无订单记录</p>
+                                    <a href="{{ url_for('main.index') }}" class="btn btn-primary">去购物</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 头像上传模态框 -->
+<div class="modal fade" id="avatarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">更换头像</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 头像上传表单 -->
+                <form action="{{ url_for('main.update_avatar') }}" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">选择图片</label>
+                        <input type="file" class="form-control" name="avatar" accept="image/*" required>
+                        <div class="form-text">支持 jpg、png、gif 格式，文件大小不超过 2MB</div>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">上传</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 取消订单确认模态框 -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">取消订单确认</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要取消订单 <span id="cancelOrderNumber" class="fw-bold"></span> 吗？</p>
+                <p class="text-danger"><small>注意：订单取消后无法恢复</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <form id="cancelOrderForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">确认取消</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* 个人中心侧边栏样式 */
+.profile-sidebar {
+    border-bottom: 1px solid rgba(0,0,0,.125);
+}
+
+/* 订单项样式 */
+.order-item {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+}
+.order-item:last-child {
+    border-bottom: none;
+}
+
+/* 商品图片样式 */
+.product-item img {
+    border-radius: 4px;
+}
+</style>
+<script>
+// 页面加载完成后执行
+document.addEventListener('DOMContentLoaded', function() {
+    // 获取URL参数中的active_tab
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('active_tab');
+
+    // 初始化 Bootstrap 标签页
+    var triggerTabList = [].slice.call(document.querySelectorAll('.list-group-item'))
+    
+    // 如果URL中指定了active_tab，激活对应的标签页
+    if (activeTab === 'orders') {
+        // 移除所有active类
+        triggerTabList.forEach(item => {
+            item.classList.remove('active');
+            const target = item.getAttribute('data-bs-target');
+            document.querySelector(target).classList.remove('show', 'active');
+        });
+        
+        // 激活订单标签页
+        const ordersTab = document.querySelector('[data-bs-target="#my-orders"]');
+        const ordersContent = document.querySelector('#my-orders');
+        if (ordersTab && ordersContent) {
+            ordersTab.classList.add('active');
+            ordersContent.classList.add('show', 'active');
+        }
+    }
+});
+
+function showCancelConfirmation(orderId, orderNumber) {
+    document.getElementById('cancelOrderNumber').textContent = orderNumber;
+    document.getElementById('cancelOrderForm').action = `/order/${orderId}/cancel`;
+    new bootstrap.Modal(document.getElementById('cancelOrderModal')).show();
+}
+</script>
+{% endblock %} 

@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}订单支付 - 乐优服装商城{% endblock %}
+
+{% block styles %}
+<style>
+/* 支付容器样式 */
+.payment-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* 支付头部样式 */
+.payment-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+/* 支付金额样式 */
+.payment-amount {
+    font-size: 2rem;
+    color: #f60;
+    font-weight: bold;
+}
+
+/* 支付方式列表样式 */
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+/* 单个支付方式样式 */
+.payment-method {
+    padding: 1rem;
+    border: 2px solid #eee;
+    border-radius: 8px;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+/* 支付方式悬停效果 */
+.payment-method:hover {
+    border-color: #007bff;
+    background-color: #f8f9ff;
+}
+
+/* 支付方式单选框样式 */
+.payment-method-radio {
+    margin-right: 1rem;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* 支付方式标签样式 */
+.payment-method-label {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    cursor: pointer;
+    width: 100%;
+}
+
+/* 支付方式图标样式 */
+.payment-method-label img {
+    width: 32px;
+    height: 32px;
+    margin-right: 1rem;
+}
+
+/* 支付方式文字样式 */
+.payment-method-label span {
+    font-size: 1rem;
+    color: #333;
+}
+
+/* 支付信息提示样式 */
+.payment-info {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+/* 倒计时样式 */
+.timer {
+    color: #f60;
+    font-weight: bold;
+}
+
+/* 选中支付方式时的样式 */
+.payment-method input[type="radio"]:checked + .payment-method-label {
+    color: #007bff;
+}
+
+.payment-method input[type="radio"]:checked ~ .payment-method {
+    border-color: #007bff;
+    background-color: #f8f9ff;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payment-container">
+    {# 支付头部信息 #}
+    <div class="payment-header">
+        <h2>订单支付</h2>
+        <p>订单号：{{ order.order_number }}</p>
+        <div class="payment-amount">￥{{ "%.2f"|format(order.total_amount) }}</div>
+    </div>
+
+    {# 支付提示信息 #}
+    <div class="payment-info">
+        <p class="mb-2">请在 <span class="timer">15:00</span> 内完成支付</p>
+        <small class="text-muted">支付完成后，请勿关闭页面，等待系统自动跳转</small>
+    </div>
+
+    {# 支付表单 #}
+    <form id="paymentForm" action="{{ url_for('main.process_payment', order_id=order.id) }}" method="post">
+        <div class="payment-methods">
+            {# 支付宝支付选项 #}
+            <div class="payment-method">
+                <input type="radio" name="payment_method" value="alipay" id="alipay" class="payment-method-radio">
+                <label for="alipay" class="payment-method-label">
+                    <img src="{{ url_for('static', filename='images/zhifubao.png') }}" alt="支付宝支付">
+                    <span>支付宝支付</span>
+                </label>
+            </div>
+            {# 微信支付选项 #}
+            <div class="payment-method">
+                <input type="radio" name="payment_method" value="wechat" id="wechat" class="payment-method-radio">
+                <label for="wechat" class="payment-method-label">
+                    <img src="{{ url_for('static', filename='images/weixin.png') }}" alt="微信支付">
+                    <span>微信支付</span>
+                </label>
+            </div>
+        </div>
+        {# 支付按钮 #}
+        <button type="submit" class="btn btn-primary w-100" id="payButton" disabled>
+            确认支付
+        </button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 页面加载完成后执行
+document.addEventListener('DOMContentLoaded', function() {
+    // 获取支付方式单选框和支付按钮
+    const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
+    const payButton = document.getElementById('payButton');
+
+    // 监听支付方式选择
+    paymentRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            // 选择支付方式后启用支付按钮
+            payButton.disabled = !this.checked;
+        });
+    });
+
+    // 点击整个支付方式区域时触发单选框
+    document.querySelectorAll('.payment-method').forEach(method => {
+        method.addEventListener('click', function(e) {
+            if (e.target.type !== 'radio') {
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change'));
+            }
+        });
+    });
+
+    // 倒计时功能
+    let timeLeft = 15 * 60; // 15分钟
+    const timerElement = document.querySelector('.timer');
+    
+    // 更新倒计时显示
+    function updateTimer() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        
+        if (timeLeft > 0) {
+            timeLeft--;
+            setTimeout(updateTimer, 1000);
+        } else {
+            // 超时后跳转到个人中心
+            alert('支付超时，请重新下单');
+            window.location.href = "{{ url_for('main.profile') }}";
+        }
+    }
+    
+    // 启动倒计时
+    updateTimer();
+
+    // 表单提交处理
+    document.getElementById('paymentForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
+        if (!selectedMethod) {
+            alert('请选择支付方式');
+            return;
+        }
+
+        // 显示加载状态
+        payButton.disabled = true;
+        payButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 支付处理中...';
+
+        // 提交支付请求
+        this.submit();
+    });
+});
+</script>
+{% endblock %} 

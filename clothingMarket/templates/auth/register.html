@@ -1,0 +1,38 @@
+{# 继承自base.html模板 #}
+{% extends "base.html" %}
+
+{# 设置页面标题 #}
+{% block title %}注册 - 乐优服装商城{% endblock %}
+
+{# 主内容区域 #}
+{% block content %}
+{# 注册表单容器，使用Bootstrap网格系统居中显示 #}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        {# 注册卡片 #}
+        <div class="card">
+            {# 卡片头部 #}
+            <div class="card-header">
+                <h4 class="mb-0">注册新账号</h4>
+            </div>
+            {# 卡片主体 #}
+            <div class="card-body">
+                {# 注册表单，使用POST方法提交 #}
+                <form method="POST">
+                    {# 用户名输入框 #}
+                    <div class="mb-3">
+                        <label for="username" class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">密码</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">注册</button>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-link">已有账号？立即登录</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
